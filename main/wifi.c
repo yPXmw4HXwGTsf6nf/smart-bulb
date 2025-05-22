@@ -5,9 +5,12 @@
 #include "esp_log.h"
 #include "esp_netif.h"
 #include "mdns.h"
+#include <string.h>   // for strncpy
 
 static const char *TAG = "wifi";
 static EventGroupHandle_t wifi_event_group;
+/* keeps track of whether wifi has already been set up */  
+static bool s_initialized = false;
 const int WIFI_CONNECTED_BIT = BIT0;
 
 static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
@@ -33,6 +36,11 @@ static void mdns_init_default(void)
 
 void wifi_init(void)
 {
+    /* guard clause: bail if init was already completed */  
+    if (s_initialized) {  
+        ESP_LOGW(TAG, "wifi already initialized");  
+        return;  
+    }  
     wifi_event_group = xEventGroupCreate();
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -51,6 +59,7 @@ void wifi_init(void)
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wc));
     ESP_ERROR_CHECK(esp_wifi_start());
+    s_initialized = true;
 
     mdns_init_default();
     ESP_LOGI(TAG,"wifi init done");

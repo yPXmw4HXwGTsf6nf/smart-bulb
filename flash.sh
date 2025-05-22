@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
-set -e
-idf.py build
+# flashes the firmware to the esp device then opens the serial monitor
+set -eu
 idf.py -p "${1:-/dev/ttyUSB0}" flash monitor
